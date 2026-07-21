@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KubanAdventures — Премиальные Эко-Приключения</title>
+  
+  <!-- Шрифты Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome 6.4.0 (Free CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Скрипты Firebase SDK (Compat версия для простой интеграции в один файл) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* === СИСТЕМНЫЕ НАСТРОЙКИ И ПЕРЕМЕННЫЕ === */
+    :root {
+      --primary-dark: #06231A;
+      --accent-gold: #C87A2C;
+      --accent-gold-hover: #E08B38;
+      --light-beige: #F9F6F0;
+      --midnight-blue: #0B1D3A;
+      --text-dark: #1A2E26;
+      --text-light: #F9F6F0;
+      
+      --glass-bg: rgba(6, 35, 26, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      
+      --font-display: 'Playfair Display', serif;
+      --font-sans: 'Inter', sans-serif;
+      --transition-smooth: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--primary-dark);
+      color: var(--text-light);
+      overflow-x: hidden;
+      line-height: 1.7;
+    }
+
+    /* === ТЕКСТУРНЫЙ ШУМ (БЕЗОПАСНЫЙ СИНТАКСИС) === */
+    .noise-bg {
+      position: relative;
+    }
+    .noise-bg::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' seed='2'/%3E%3CfeColorMatrix type='saturate' values='0.3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.02;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* === КАСТОМНЫЙ СКРОЛЛБАР === */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--primary-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent-gold);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-gold-hover);
+    }
+
+    /* === СТРАТЕГИЧЕСКИЙ ХЕДЕР === */
+    header {
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      z-index: 1000;
+      padding: 20px 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition-smooth);
+      background: transparent;
+    }
+    header.scrolled {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 15px 5%;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo i {
+      color: var(--accent-gold);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-light);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      position: relative;
+      padding: 5px 0;
+      transition: var(--transition-smooth);
+    }
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; width: 0; height: 2px;
+      background-color: var(--accent-gold);
+      transition: var(--transition-smooth);
+    }
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .btn-cta {
+      background: transparent;
+      border: 1px solid var(--accent-gold);
+      color: var(--accent-gold);
+      padding: 10px 24px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition-smooth);
+    }
+    .btn-cta:hover {
+      background: var(--accent-gold);
+      color: white;
+      box-shadow: 0 0 20px rgba(200, 122, 44, 0.45);
+    }
+
+    /* === HERO-БЛОК === */
+    .hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 20px;
+      overflow: hidden;
+      background: linear-gradient(to bottom, var(--midnight-blue) 0%, #082d24 60%, var(--primary-dark) 100%);
+    }
+
+    .hero-bg-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      transform: translateY(calc(var(--scroll-y, 0px) * 0.45));
+    }
+
+    .hero-compass {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(calc(var(--scroll-y, 0px) * 0.05deg));
+      font-size: 32vw;
+      color: rgba(255, 255, 255, 0.018);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      max-width: 900px;
+      transform: translateY(calc(var(--scroll-y, 0px) * -0.15));
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      color: var(--accent-gold);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      line-height: 1.15;
+      margin-bottom: 30px;
+      color: var(--text-light);
+    }
+
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--accent-gold);
+      color: white;
+      padding: 16px 36px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 4px;
+      box-shadow: 0 10px 25px rgba(200, 122, 44, 0.25);
+      transition: var(--transition-smooth);
+      border: none;
+      cursor: pointer;
+    }
+    .hero-btn:hover {
+      background: var(--accent-gold-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 30px rgba(200, 122, 44, 0.4);
+    }
+
+    /* === СЕКЦИЯ РЕГИОНОВ === */
+    .section-title {
+      text-align: center;
+      margin-bottom: 50px;
+      padding: 0 20px;
+    }
+    .section-subtitle {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--accent-gold);
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .section-title h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+    }
+
+    .regions-section {
+      padding: 100px 5%;
+      background: var(--primary-dark);
+    }
+
+    .regions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 25px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .region-card {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 4/5;
+      cursor: pointer;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 30px;
+    }
+
+    /* Индивидуальные фоновые градиенты регионов */
+    .region-card[data-id="sochi"] { background: linear-gradient(135deg, rgba(5, 59, 46, 0.85), var(--midnight-blue)); }
+    .region-card[data-id="gelendzhik"] { background: linear-gradient(135deg, rgba(15, 77, 58, 0.85), rgba(0, 128, 128, 0.85)); }
+    .region-card[data-id="anapa"] { background: linear-gradient(135deg, rgba(200, 122, 44, 0.85), var(--midnight-blue)); }
+    .region-card[data-id="novorossiysk"] { background: linear-gradient(135deg, rgba(27, 38, 59, 0.85), rgba(6, 35, 26, 0.85)); }
+    .region-card[data-id="polyana"] { background: linear-gradient(135deg, rgba(74, 87, 89, 0.85), rgba(6, 35, 26, 0.85)); }
+    .region-card[data-id="abrau"] { background: linear-gradient(135deg, rgba(43, 12, 42, 0.85), rgba(6, 35, 26, 0.85)); }
+    .region-card[data-id="lagonaki"] { background: linear-gradient(135deg, rgba(61, 90, 128, 0.85), rgba(6, 35, 26, 0.85)); }
+
+    .region-card .card-icon {
+      font-size: 2.2rem;
+      color: var(--accent-gold);
+      margin-bottom: 15px;
+      transition: var(--transition-smooth);
+    }
+    .region-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      margin-bottom: 5px;
+    }
+    .region-card p {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    .region-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .regions-grid.has-active .region-card {
+      opacity: 0.45;
+    }
+    .regions-grid.has-active .region-card.active {
+      opacity: 1;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px var(--accent-gold), 0 20px 40px rgba(200, 122, 44, 0.35);
+    }
+
+    /* === ДИНАМИЧЕСКАЯ СЕКЦИЯ ТУРОВ === */
+    .tours-section {
+      padding: 100px 5%;
+      background: var(--light-beige);
+      color: var(--text-dark);
+      display: none;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .tours-section.visible {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .tours-section .section-title h2 {
+      color: var(--text-dark);
+    }
+
+    .filters-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 50px;
+    }
+    .filter-pill {
+      background: transparent;
+      border: 1px solid rgba(6, 35, 26, 0.15);
+      color: var(--text-dark);
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .filter-pill:hover, .filter-pill.active {
+      background: var(--accent-gold);
+      color: white;
+      border-color: var(--accent-gold);
+    }
+
+    .tours-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 35px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .tour-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(6, 35, 26, 0.04);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      position: relative;
+    }
+
+    .tour-image-fallback {
+      height: 250px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .tour-card[data-category="jeep"] .tour-image-fallback {
+      background: radial-gradient(circle at 30% 20%, rgba(200, 122, 44, 0.4), transparent), linear-gradient(135deg, #1f1105 0%, #06231a 100%);
+    }
+    .tour-card[data-category="quad"] .tour-image-fallback {
+      background: linear-gradient(135deg, #06231a 0%, #03110d 100%), repeating-linear-gradient(45deg, rgba(200, 122, 44, 0.05) 0px, rgba(200, 122, 44, 0.05) 10px, transparent 10px, transparent 20px);
+    }
+    .tour-card[data-category="sup"] .tour-image-fallback {
+      background: linear-gradient(135deg, #0b1d3a 0%, #008080 50%, #06231a 100%);
+    }
+    .tour-card[data-category="hiking"] .tour-image-fallback {
+      background: linear-gradient(135deg, #0d3a24 0%, #06231a 50%, #03110d 100%);
+    }
+
+    .tour-watermark {
+      font-size: 6rem;
+      color: rgba(255, 255, 255, 0.07);
+      position: absolute;
+      transform: scale(1);
+      transition: var(--transition-smooth);
+    }
+
+    .tour-info {
+      padding: 30px;
+      background-color: var(--light-beige);
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-top: 1px solid rgba(6, 35, 26, 0.05);
+    }
+    .tour-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 15px;
+      color: var(--text-dark);
+    }
+    .tour-desc {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-bottom: 25px;
+      color: var(--text-dark);
+    }
+
+    .tour-specs {
+      display: flex;
+      gap: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 25px;
+      opacity: 0.8;
+    }
+    .tour-specs span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tour-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      border-top: 1px solid rgba(6, 35, 26, 0.1);
+      padding-top: 20px;
+    }
+    .tour-price-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .tour-price-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      opacity: 0.6;
+    }
+    .tour-price {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+    }
+
+    .tour-btn-circle {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: var(--primary-dark);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+      border: none;
+      cursor: pointer;
+    }
+
+    .tour-card:hover {
+      transform: translateY(-8px);
+    }
+    .tour-card[data-category="jeep"]:hover { box-shadow: 0 15px 35px rgba(200, 122, 44, 0.25); }
+    .tour-card[data-category="quad"]:hover { box-shadow: 0 15px 35px rgba(6, 35, 26, 0.2); }
+    .tour-card[data-category="sup"]:hover { box-shadow: 0 15px 35px rgba(0, 128, 128, 0.25); }
+    .tour-card[data-category="hiking"]:hover { box-shadow: 0 15px 35px rgba(13, 58, 36, 0.25); }
+
+    .tour-card:hover .tour-image-fallback {
+      transform: scale(1.02);
+    }
+    .tour-card:hover .tour-watermark {
+      transform: scale(1.15);
+      color: rgba(255, 255, 255, 0.12);
+    }
+    .tour-card:hover .tour-btn-circle {
+      background: var(--accent-gold);
+      transform: rotate(45deg);
+    }
+
+    /* === БЛОК ЭКСПЕРТИЗА И БЕЗОПАСНОСТЬ === */
+    .stats-section {
+      padding: 100px 5%;
+      background: var(--primary-dark);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 40px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      transition: var(--transition-smooth);
+    }
+    .stat-item:hover {
+      border-color: var(--accent-gold);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .stat-icon {
+      font-size: 2.5rem;
+      color: var(--accent-gold);
+      margin-bottom: 20px;
+    }
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text-light);
+    }
+    .stat-label {
+      font-size: 0.95rem;
+      opacity: 0.7;
+    }
+
+    /* === ИЗОЛИРОВАННЫЙ ФУТЕР === */
+    footer {
+      background: #03140f;
+      color: var(--text-light);
+      padding: 80px 5% 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 50px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding-bottom: 50px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .footer-col h4 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      margin-bottom: 25px;
+    }
+    .footer-links {
+      list-style: none;
+    }
+    .footer-links li {
+      margin-bottom: 15px;
+    }
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: var(--transition-smooth);
+    }
+    .footer-links a:hover {
+      color: var(--accent-gold);
+    }
+    .footer-contact {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .footer-contact i {
+      color: var(--accent-gold);
+      margin-right: 10px;
+    }
+    .social-links {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .social-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+      text-decoration: none;
+      border: none;
+    }
+    .social-btn:hover {
+      background: var(--accent-gold);
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      text-align: center;
+      padding-top: 40px;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* === АДАПТИВНОСТЬ === */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body class="noise-bg">
+
+  <!-- СТРАТЕГИЧЕСКИЙ ХЕДЕР -->
+  <header>
+    <a href="#" class="logo">
+      <i class="fa-solid fa-mountain"></i>
+      KubanAdventures
+    </a>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="#regions">Регионы</a></li>
+        <li><a href="#tours">Туры</a></li>
+        <li><a href="#expertise">О нас</a></li>
+        <li><a href="#contacts">Контакты</a></li>
+      </ul>
+    </nav>
+    <div class="header-controls">
+      <button class="btn-cta" onclick="scrollToSection('regions')">Начать</button>
+    </div>
+  </header>
+
+  <!-- HERO-БЛОК -->
+  <section class="hero">
+    <div class="hero-compass">
+      <i class="fa-solid fa-compass"></i>
+    </div>
+    <div class="hero-content">
+      <p class="hero-subtitle">Откройте для себя</p>
+      <h1 class="hero-title">Премиальные Эко-Приключения Кубани</h1>
+      <p style="margin-bottom: 30px; font-size: 1.1rem; opacity: 0.9;">Джип-туры, квадроциклы, SUP и пешие походы в сердце природы</p>
+      <button class="hero-btn" onclick="scrollToSection('tours')">
+        <i class="fa-solid fa-arrow-right"></i> Выбрать тур
+      </button>
+    </div>
+  </section>
+
+  <!-- СЕКЦИЯ РЕГИОНОВ -->
+  <section class="regions-section" id="regions">
+    <div class="section-title">
+      <span class="section-subtitle">ИССЛЕДУЙТЕ</span>
+      <h2>Регионы Кубани</h2>
+    </div>
+    <div class="regions-grid" id="regionsGrid">
+      <div class="region-card" data-id="sochi">
+        <i class="fa-solid fa-tree card-icon"></i>
+        <h3>Сочи</h3>
+        <p>Горные туры и джип-сафари</p>
+      </div>
+      <div class="region-card" data-id="gelendzhik">
+        <i class="fa-solid fa-water card-icon"></i>
+        <h3>Геленджик</h3>
+        <p>Морские приключения</p>
+      </div>
+      <div class="region-card" data-id="anapa">
+        <i class="fa-solid fa-sun card-icon"></i>
+        <h3>Анапа</h3>
+        <p>Пляжные экскурсии</p>
+      </div>
+      <div class="region-card" data-id="novorossiysk">
+        <i class="fa-solid fa-wind card-icon"></i>
+        <h3>Новороссийск</h3>
+        <p>Активные спорты</p>
+      </div>
+      <div class="region-card" data-id="polyana">
+        <i class="fa-solid fa-mountain-sun card-icon"></i>
+        <h3>Поляна</h3>
+        <p>Горные тропы</p>
+      </div>
+      <div class="region-card" data-id="abrau">
+        <i class="fa-solid fa-wine-glass card-icon"></i>
+        <h3>Абрау</h3>
+        <p>Винные туры</p>
+      </div>
+      <div class="region-card" data-id="lagonaki">
+        <i class="fa-solid fa-person-hiking card-icon"></i>
+        <h3>Лагонаки</h3>
+        <p>Экстремальные походы</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- СЕКЦИЯ ТУРОВ -->
+  <section class="tours-section" id="tours">
+    <div class="section-title">
+      <span class="section-subtitle">ВЫБИРАЙТЕ</span>
+      <h2>Популярные Туры</h2>
+    </div>
+    
+    <div class="filters-container">
+      <button class="filter-pill active" onclick="filterTours('all')">Все</button>
+      <button class="filter-pill" onclick="filterTours('jeep')">🚙 Джип-туры</button>
+      <button class="filter-pill" onclick="filterTours('quad')">🏍️ Квадроциклы</button>
+      <button class="filter-pill" onclick="filterTours('sup')">🏄 SUP</button>
+      <button class="filter-pill" onclick="filterTours('hiking')">🥾 Пешие</button>
+    </div>
+
+    <div class="tours-grid" id="toursGrid">
+      <!-- Туры будут добавлены JavaScript'ом -->
+    </div>
+  </section>
+
+  <!-- СЕКЦИЯ СТАТИСТИКИ -->
+  <section class="stats-section" id="expertise">
+    <div class="section-title">
+      <span class="section-subtitle">О НАС</span>
+      <h2>Наша Экспертиза</h2>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-number">5000+</div>
+        <div class="stat-label">Счастливых туристов</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-map"></i></div>
+        <div class="stat-number">25+</div>
+        <div class="stat-label">Уникальных маршрутов</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-shield"></i></div>
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Безопасность</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
+        <div class="stat-number">4.9/5</div>
+        <div class="stat-label">Рейтинг</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ФУТЕР -->
+  <footer id="contacts">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>KubanAdventures</h4>
+        <p>Премиальные эко-приключения в сердце Кубани. Создаем незабываемые впечатления с 2020 года.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Быстрые ссылки</h4>
+        <ul class="footer-links">
+          <li><a href="#regions">Регионы</a></li>
+          <li><a href="#tours">Туры</a></li>
+          <li><a href="#expertise">О нас</a></li>
+          <li><a href="#contacts">Контакты</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Контакты</h4>
+        <div class="footer-contact">
+          <div><i class="fa-solid fa-phone"></i> +7 (XXX) XXX-XX-XX</div>
+          <div><i class="fa-solid fa-envelope"></i> info@kubanadventures.ru</div>
+          <div><i class="fa-solid fa-map-pin"></i> Сочи, Краснодарский край</div>
+        </div>
+        <div class="social-links">
+          <a href="#" class="social-btn"><i class="fa-brands fa-vk"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-telegram"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="copyright">
+      <p>&copy; 2024 KubanAdventures. Все права защищены.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Данные туров
+    const toursData = [
+      {
+        id: 1,
+        title: "Джип-сафари в горы Сочи",
+        category: "jeep",
+        description: "Экстремальное приключение на джипе по горным дорогам Кавказа",
+        specs: "4 часа • для всех",
+        price: "3500 ₽",
+        region: "Сочи"
+      },
+      {
+        id: 2,
+        title: "Водный маршрут на SUP",
+        category: "sup",
+        description: "Спокойное путешествие по горным озерам Абрау",
+        specs: "3 часа • средняя сложность",
+        price: "2500 ₽",
+        region: "Абрау"
+      },
+      {
+        id: 3,
+        title: "Пеший поход на Лагонаки",
+        category: "hiking",
+        description: "Экстремальный поход на плато с видом на море",
+        specs: "8 часов • сложный",
+        price: "2000 ₽",
+        region: "Лагонаки"
+      },
+      {
+        id: 4,
+        title: "Квадроциклы по пустыне",
+        category: "quad",
+        description: "Быстрая езда на квадроциклах по дюнам Анапы",
+        specs: "3 часа • средняя сложность",
+        price: "3000 ₽",
+        region: "Анапа"
+      },
+      {
+        id: 5,
+        title: "Горный джип-тур Геленджик",
+        category: "jeep",
+        description: "Путешествие к смотровым площадкам и водопадам",
+        specs: "5 часов • для всех",
+        price: "4000 ₽",
+        region: "Геленджик"
+      },
+      {
+        id: 6,
+        title: "Винный тур в Абрау",
+        category: "hiking",
+        description: "Экскурсия по винодельням с дегустацией",
+        specs: "4 часа • спокойный",
+        price: "2800 ₽",
+        region: "Абрау"
+      }
+    ];
+
+    let currentFilter = 'all';
+
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTours(toursData);
+      setupRegionCards();
+      setupScrollHeader();
+      showToursSection();
+    });
+
+    // Рендер туров
+    function renderTours(tours) {
+      const toursGrid = document.getElementById('toursGrid');
+      toursGrid.innerHTML = tours
+        .filter(tour => currentFilter === 'all' || tour.category === currentFilter)
+        .map(tour => `
+          <div class="tour-card" data-category="${tour.category}">
+            <div class="tour-image-fallback">
+              <div class="tour-watermark">${getCategoryIcon(tour.category)}</div>
+            </div>
+            <div class="tour-info">
+              <div>
+                <h3 class="tour-title">${tour.title}</h3>
+                <p class="tour-desc">${tour.description}</p>
+                <div class="tour-specs">
+                  <span>📍 ${tour.region}</span>
+                  <span>${tour.specs}</span>
+                </div>
+              </div>
+              <div class="tour-footer">
+                <div class="tour-price-container">
+                  <span class="tour-price-label">от</span>
+                  <span class="tour-price">${tour.price}</span>
+                </div>
+                <button class="tour-btn-circle" onclick="alert('Тур: ${tour.title}\\nЦена: ${tour.price}')" title="Больше информации">
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `)
+        .join('');
+    }
+
+    // Получить иконку категории
+    function getCategoryIcon(category) {
+      const icons = {
+        jeep: '🚙',
+        quad: '🏍️',
+        sup: '🏄',
+        hiking: '🥾'
+      };
+      return icons[category] || '🎯';
+    }
+
+    // Фильтр туров
+    function filterTours(category) {
+      currentFilter = category;
+      
+      // Обновить активные кнопки
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      renderTours(toursData);
+    }
+
+    // Настройка карточек регионов
+    function setupRegionCards() {
+      document.querySelectorAll('.region-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const grid = card.closest('.regions-grid');
+          grid.classList.toggle('has-active', grid.querySelector('.region-card.active') !== card);
+          document.querySelectorAll('.region-card.active').forEach(c => {
+            if (c !== card) c.classList.remove('active');
+          });
+          card.classList.toggle('active');
+        });
+      });
+    }
+
+    // Фиксированный хедер при скролле
+    function setupScrollHeader() {
+      window.addEventListener('scroll', () => {
+        document.querySelector('header').classList.toggle('scrolled', window.scrollY > 50);
+      });
+    }
+
+    // Показать секцию туров
+    function showToursSection() {
+      document.querySelector('.tours-section').classList.add('visible');
+    }
+
+    // Скролл к секции
+    function scrollToSection(id) {
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
