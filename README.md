@@ -1,1 +1,1601 @@
-# KUBA
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KubanAdventures — Премиальные Эко-Приключения</title>
+  
+  <!-- Шрифты Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome 6.4.0 (Free CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === СИСТЕМНЫЕ НАСТРОЙКИ И ПЕРЕМЕННЫЕ === */
+    :root {
+      --primary-dark: #06231A;
+      --accent-gold: #C87A2C;
+      --accent-gold-hover: #E08B38;
+      --light-beige: #F9F6F0;
+      --midnight-blue: #0B1D3A;
+      --text-dark: #1A2E26;
+      --text-light: #F9F6F0;
+      
+      --glass-bg: rgba(6, 35, 26, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      
+      --font-display: 'Playfair Display', serif;
+      --font-sans: 'Inter', sans-serif;
+      --transition-smooth: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--primary-dark);
+      color: var(--text-light);
+      overflow-x: hidden;
+      line-height: 1.7;
+    }
+
+    /* === ТЕКСТУРНЫЙ ШУМ (БЕЗОПАСНЫЙ СИНТАКСИС) === */
+    .noise-bg {
+      position: relative;
+    }
+    .noise-bg::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      /* %23 вместо # предотвращает ошибки парсинга SVG в CSS */
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* === КАСТОМНЫЙ СКРОЛЛБАР === */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--primary-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent-gold);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-gold-hover);
+    }
+
+    /* === СТРАТЕГИЧЕСКИЙ ХЕДЕР === */
+    header {
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      z-index: 1000;
+      padding: 20px 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition-smooth);
+      background: transparent;
+    }
+    header.scrolled {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 15px 5%;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo i {
+      color: var(--accent-gold);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 35px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-light);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      position: relative;
+      padding: 5px 0;
+      transition: var(--transition-smooth);
+    }
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; width: 0; height: 2px;
+      background-color: var(--accent-gold);
+      transition: var(--transition-smooth);
+    }
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .btn-cta {
+      background: transparent;
+      border: 1px solid var(--accent-gold);
+      color: var(--accent-gold);
+      padding: 10px 24px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition-smooth);
+    }
+    .btn-cta:hover {
+      background: var(--accent-gold);
+      color: white;
+      box-shadow: 0 0 20px rgba(200, 122, 44, 0.45);
+    }
+
+    /* === HERO-БЛОК === */
+    .hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 20px;
+      overflow: hidden;
+      /* Плавный горный рассвет */
+      background: linear-gradient(to bottom, var(--midnight-blue) 0%, #082d24 60%, var(--primary-dark) 100%);
+    }
+
+    /* Параллакс-эффект реализуется через JS и CSS variables для производительности */
+    .hero-bg-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      transform: translateY(calc(var(--scroll-y, 0px) * 0.45));
+    }
+
+    .hero-compass {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(calc(var(--scroll-y, 0px) * 0.05deg));
+      font-size: 32vw;
+      color: rgba(255, 255, 255, 0.018);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      max-width: 900px;
+      transform: translateY(calc(var(--scroll-y, 0px) * -0.15));
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      color: var(--accent-gold);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      line-height: 1.15;
+      margin-bottom: 30px;
+      color: var(--text-light);
+    }
+
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--accent-gold);
+      color: white;
+      padding: 16px 36px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 4px;
+      box-shadow: 0 10px 25px rgba(200, 122, 44, 0.25);
+      transition: var(--transition-smooth);
+    }
+    .hero-btn:hover {
+      background: var(--accent-gold-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 30px rgba(200, 122, 44, 0.4);
+    }
+
+    /* === СЕКЦИЯ РЕГИОНОВ === */
+    .section-title {
+      text-align: center;
+      margin-bottom: 50px;
+      padding: 0 20px;
+    }
+    .section-subtitle {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--accent-gold);
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .section-title h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+    }
+
+    .regions-section {
+      padding: 100px 5%;
+      background: var(--primary-dark);
+    }
+
+    .regions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 25px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .region-card {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 4/5;
+      cursor: pointer;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 30px;
+    }
+
+    /* Индивидуальные фоновые градиенты регионов */
+    .region-card[data-id="sochi"] { background: linear-gradient(135deg, rgba(5, 59, 46, 0.85), var(--midnight-blue)); }
+    .region-card[data-id="gelendzhik"] { background: linear-gradient(135deg, rgba(15, 77, 58, 0.85), rgba(0, 128, 128, 0.85)); }
+    .region-card[data-id="anapa"] { background: linear-gradient(135deg, rgba(200, 122, 44, 0.85), var(--midnight-blue)); }
+    .region-card[data-id="novorossiysk"] { background: linear-gradient(135deg, rgba(27, 38, 59, 0.85), rgba(6, 35, 26, 0.85)); }
+    .region-card[data-id="polyana"] { background: linear-gradient(135deg, rgba(74, 87, 89, 0.85), rgba(6, 35, 26, 0.85)); }
+    .region-card[data-id="abrau"] { background: linear-gradient(135deg, rgba(43, 12, 42, 0.85), rgba(6, 35, 26, 0.85)); }
+    .region-card[data-id="lagonaki"] { background: linear-gradient(135deg, rgba(61, 90, 128, 0.85), rgba(6, 35, 26, 0.85)); }
+
+    .region-card .card-icon {
+      font-size: 2.2rem;
+      color: var(--accent-gold);
+      margin-bottom: 15px;
+      transition: var(--transition-smooth);
+    }
+    .region-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      margin-bottom: 5px;
+    }
+    .region-card p {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    .region-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Интерактивное состояние выбора регионов */
+    .regions-grid.has-active .region-card {
+      opacity: 0.45;
+    }
+    .regions-grid.has-active .region-card.active {
+      opacity: 1;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px var(--accent-gold), 0 20px 40px rgba(200, 122, 44, 0.35);
+    }
+
+    /* === ДИНАМИЧЕСКАЯ СЕКЦИЯ ТУРОВ === */
+    .tours-section {
+      padding: 100px 5%;
+      background: var(--light-beige);
+      color: var(--text-dark);
+      display: none; /* Отображается при выборе региона */
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .tours-section.visible {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .tours-section .section-title h2 {
+      color: var(--text-dark);
+    }
+
+    /* Панель фильтров */
+    .filters-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 50px;
+    }
+    .filter-pill {
+      background: transparent;
+      border: 1px solid rgba(6, 35, 26, 0.15);
+      color: var(--text-dark);
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .filter-pill:hover, .filter-pill.active {
+      background: var(--accent-gold);
+      color: white;
+      border-color: var(--accent-gold);
+    }
+
+    /* Сетка туров */
+    .tours-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 35px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Дизайн премиальной карточки экскурсии */
+    .tour-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(6, 35, 26, 0.04);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      position: relative;
+    }
+
+    /* Стилизация верхнего графического контейнера карточки */
+    .tour-image-fallback {
+      height: 250px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    /* Категорийные градиенты */
+    .tour-card[data-category="jeep"] .tour-image-fallback {
+      background: radial-gradient(circle at 30% 20%, rgba(200, 122, 44, 0.4), transparent), linear-gradient(135deg, #1f1105 0%, #06231a 100%);
+    }
+    .tour-card[data-category="quad"] .tour-image-fallback {
+      background: linear-gradient(135deg, #06231a 0%, #03110d 100%), repeating-linear-gradient(45deg, rgba(200, 122, 44, 0.05) 0px, rgba(200, 122, 44, 0.05) 10px, transparent 10px, transparent 20px);
+    }
+    .tour-card[data-category="sup"] .tour-image-fallback {
+      background: linear-gradient(135deg, #0b1d3a 0%, #008080 50%, #06231a 100%);
+    }
+    .tour-card[data-category="hiking"] .tour-image-fallback {
+      background: linear-gradient(135deg, #0d3a24 0%, #06231a 50%, #03110d 100%);
+    }
+
+    /* Водяной знак - иконка транспорта */
+    .tour-watermark {
+      font-size: 6rem;
+      color: rgba(255, 255, 255, 0.07);
+      position: absolute;
+      transform: scale(1);
+      transition: var(--transition-smooth);
+    }
+
+    /* Контентная часть (Creamy Beige) */
+    .tour-info {
+      padding: 30px;
+      background-color: var(--light-beige);
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-top: 1px solid rgba(6, 35, 26, 0.05);
+    }
+    .tour-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 15px;
+      color: var(--text-dark);
+    }
+    .tour-desc {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-bottom: 25px;
+      color: var(--text-dark);
+    }
+
+    .tour-specs {
+      display: flex;
+      gap: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 25px;
+      opacity: 0.8;
+    }
+    .tour-specs span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tour-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      border-top: 1px solid rgba(6, 35, 26, 0.1);
+      padding-top: 20px;
+    }
+    .tour-price-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .tour-price-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      opacity: 0.6;
+    }
+    .tour-price {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+    }
+
+    .tour-btn-circle {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: var(--primary-dark);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    /* Эффекты наведения (микро-анимации) */
+    .tour-card:hover {
+      transform: translateY(-8px);
+    }
+    /* Цветные динамические тени под карточками */
+    .tour-card[data-category="jeep"]:hover { box-shadow: 0 15px 35px rgba(200, 122, 44, 0.25); }
+    .tour-card[data-category="quad"]:hover { box-shadow: 0 15px 35px rgba(6, 35, 26, 0.2); }
+    .tour-card[data-category="sup"]:hover { box-shadow: 0 15px 35px rgba(0, 128, 128, 0.25); }
+    .tour-card[data-category="hiking"]:hover { box-shadow: 0 15px 35px rgba(13, 58, 36, 0.25); }
+
+    .tour-card:hover .tour-image-fallback {
+      transform: scale(1.02);
+    }
+    .tour-card:hover .tour-watermark {
+      transform: scale(1.15);
+      color: rgba(255, 255, 255, 0.12);
+    }
+    .tour-card:hover .tour-btn-circle {
+      background: var(--accent-gold);
+      transform: rotate(45deg);
+    }
+
+    /* === БЛОК ЭКСПЕРТИЗА И БЕЗОПАСНОСТЬ === */
+    .stats-section {
+      padding: 100px 5%;
+      background: var(--primary-dark);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 40px 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      transition: var(--transition-smooth);
+    }
+    .stat-item:hover {
+      border-color: var(--accent-gold);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .stat-icon {
+      font-size: 2.5rem;
+      color: var(--accent-gold);
+      margin-bottom: 20px;
+    }
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text-light);
+    }
+    .stat-label {
+      font-size: 0.95rem;
+      opacity: 0.7;
+    }
+
+    /* === МОДАЛЬНОЕ ОКНО ТУРА === */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(6, 35, 26, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition-smooth);
+      padding: 20px;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-window {
+      background: var(--light-beige);
+      color: var(--text-dark);
+      width: 100%;
+      max-width: 800px;
+      max-height: 90vh;
+      border-radius: 8px;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      transform: scale(0.9) translateY(20px);
+      transition: var(--transition-smooth);
+    }
+    .modal-overlay.active .modal-window {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px; right: 20px;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(6, 35, 26, 0.1);
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dark);
+      z-index: 100;
+      transition: var(--transition-smooth);
+    }
+    .modal-close:hover {
+      background: var(--accent-gold);
+      color: white;
+    }
+
+    .modal-header {
+      height: 250px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-header .tour-watermark {
+      font-size: 8rem;
+    }
+
+    .modal-body {
+      padding: 40px;
+    }
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+    .modal-specs {
+      display: flex;
+      gap: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(6, 35, 26, 0.1);
+    }
+
+    .modal-text {
+      margin-bottom: 30px;
+      font-size: 1rem;
+    }
+
+    .modal-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    .modal-detail-block h4 {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      color: var(--accent-gold);
+      letter-spacing: 1px;
+    }
+    .modal-detail-block ul {
+      list-style-position: inside;
+      font-size: 0.9rem;
+    }
+    .modal-detail-block ul li {
+      margin-bottom: 8px;
+    }
+
+    /* Интерактивная форма бронирования в модальном окне */
+    .booking-trigger-btn {
+      width: 100%;
+      background: var(--accent-gold);
+      color: white;
+      border: none;
+      padding: 16px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .booking-trigger-btn:hover {
+      background: var(--accent-gold-hover);
+    }
+
+    .booking-form-wrapper {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease-in-out;
+    }
+    .booking-form-wrapper.active {
+      max-height: 500px;
+      margin-top: 30px;
+    }
+
+    .booking-form {
+      background: rgba(6, 35, 26, 0.03);
+      border: 1px solid rgba(6, 35, 26, 0.08);
+      padding: 30px;
+      border-radius: 6px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid rgba(6, 35, 26, 0.15);
+      border-radius: 4px;
+      font-family: var(--font-sans);
+      background: white;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+    }
+    .btn-submit {
+      width: 100%;
+      background: var(--primary-dark);
+      color: white;
+      border: none;
+      padding: 14px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    .btn-submit:hover {
+      background: var(--accent-gold);
+    }
+
+    /* === ИЗОЛИРОВАННЫЙ ФУТЕР === */
+    footer {
+      background: #03140f;
+      color: var(--text-light);
+      padding: 80px 5% 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 50px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding-bottom: 50px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .footer-col h4 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      margin-bottom: 25px;
+    }
+    .footer-links {
+      list-style: none;
+    }
+    .footer-links li {
+      margin-bottom: 15px;
+    }
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: var(--transition-smooth);
+    }
+    .footer-links a:hover {
+      color: var(--accent-gold);
+    }
+    .footer-contact {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .footer-contact i {
+      color: var(--accent-gold);
+      margin-right: 10px;
+    }
+    .social-links {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .social-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+      text-decoration: none;
+    }
+    .social-btn:hover {
+      background: var(--accent-gold);
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      text-align: center;
+      padding-top: 40px;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* === АДАПТИВНОСТЬ === */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none; /* Упрощение меню для мобильных */
+      }
+      .modal-details-grid {
+        grid-template-columns: 1fr;
+      }
+      .modal-window {
+        max-height: 95vh;
+      }
+      .modal-body {
+        padding: 25px;
+      }
+      .tours-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 480px) {
+      header {
+        padding: 15px 5%;
+      }
+      .hero-title {
+        font-size: 2rem;
+      }
+      .modal-specs {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body class="noise-bg">
+
+  <!-- СТРАТЕГИЧЕСКИЙ ХЕДЕР -->
+  <header>
+    <a href="#" class="logo">
+      <i class="fa-solid fa-mountain"></i>
+      KubanAdventures
+    </a>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="#regions">Регионы</a></li>
+        <li><a href="#tours">Туры</a></li>
+        <li><a href="#expertise">О нас</a></li>
+        <li><a href="#contacts">Контакты</a></li>
+      </ul>
+    </nav>
+    <button class="btn-cta" onclick="openGeneralContact()">Связаться</button>
+  </header>
+
+  <!-- HERO-БЛОК (ПЕРВЫЙ ЭКРАН) -->
+  <section class="hero">
+    <div class="hero-bg-layer">
+      <div class="hero-compass">
+        <i class="fa-regular fa-compass"></i>
+      </div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-subtitle">Премиальные эко-приключения</p>
+      <h1 class="hero-title">Откройте Дикую Природу</h1>
+      <a href="#regions" class="hero-btn">
+        Исследовать маршруты
+        <i class="fa-solid fa-arrow-down"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- СЕКЦИЯ ВЫБОРА РЕГИОНА -->
+  <section id="regions" class="regions-section">
+    <div class="section-title">
+      <span class="section-subtitle">Выберите направление</span>
+      <h2>География Приключений</h2>
+    </div>
+    <div class="regions-grid" id="regionsGrid">
+      <!-- 7 Карточек регионов -->
+      <div class="region-card" data-id="sochi">
+        <div class="card-icon"><i class="fa-solid fa-tree"></i></div>
+        <h3>Сочи</h3>
+        <p>Субтропики, ущелья и водопады</p>
+      </div>
+      <div class="region-card" data-id="gelendzhik">
+        <div class="card-icon"><i class="fa-solid fa-anchor"></i></div>
+        <h3>Геленджик</h3>
+        <p>Белые скалы и сосновые леса</p>
+      </div>
+      <div class="region-card" data-id="anapa">
+        <div class="card-icon"><i class="fa-solid fa-sun"></i></div>
+        <h3>Анапа</h3>
+        <p>Песчаные дюны и кипарисы</p>
+      </div>
+      <div class="region-card" data-id="novorossiysk">
+        <div class="card-icon"><i class="fa-solid fa-wind"></i></div>
+        <h3>Новороссийск</h3>
+        <p>Горные хребты и морская сила</p>
+      </div>
+      <div class="region-card" data-id="polyana">
+        <div class="card-icon"><i class="fa-solid fa-snowflake"></i></div>
+        <h3>Красная Поляна</h3>
+        <p>Высокогорные тропы и пики</p>
+      </div>
+      <div class="region-card" data-id="abrau">
+        <div class="card-icon"><i class="fa-solid fa-wine-glass"></i></div>
+        <h3>Абрау-Дюрсо</h3>
+        <p>Изумрудные озера и холмы</p>
+      </div>
+      <div class="region-card" data-id="lagonaki">
+        <div class="card-icon"><i class="fa-solid fa-mountain-sun"></i></div>
+        <h3>Лаго-Наки</h3>
+        <p>Альпийские луга и пещеры</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ДИНАМИЧЕСКАЯ СЕКЦИЯ ТУРОВ -->
+  <section id="tours" class="tours-section">
+    <div class="section-title">
+      <span class="section-subtitle" id="selectedRegionSubtitle">Активная программа</span>
+      <h2 id="selectedRegionTitle">Экспедиции</h2>
+    </div>
+
+    <!-- Фильтры категорий -->
+    <div class="filters-container">
+      <button class="filter-pill active" data-filter="all">Все маршруты</button>
+      <button class="filter-pill" data-filter="jeep">Джип-туры 🚙</button>
+      <button class="filter-pill" data-filter="quad">Квадроциклы 🏍️</button>
+      <button class="filter-pill" data-filter="sup">Сап-прогулки 🏄‍♂️</button>
+      <button class="filter-pill" data-filter="hiking">Хайкинг 🥾</button>
+    </div>
+
+    <!-- Сетка экскурсий -->
+    <div class="tours-grid" id="toursGrid">
+      <!-- Наполняется динамически через JS -->
+    </div>
+  </section>
+
+  <!-- БЛОК "ЭКСПЕРТИЗА И БЕЗОПАСНОСТЬ" -->
+  <section id="expertise" class="stats-section">
+    <div class="section-title">
+      <span class="section-subtitle">Почему доверяют нам</span>
+      <h2>Стандарты Премиум Отдыха</h2>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="stat-number">>10 лет</div>
+        <div class="stat-label">Опыта в экстремальном туризме</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+        <div class="stat-number">50+</div>
+        <div class="stat-label">Уникальных авторских маршрутов</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-number">до 8 чел.</div>
+        <div class="stat-label">В группе для полного комфорта</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon"><i class="fa-solid fa-certificate"></i></div>
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Инструкторов сертифицированы МЧС</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ИЗОЛИРОВАННЫЙ ФУТЕР -->
+  <footer id="contacts">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>KubanAdventures</h4>
+        <p style="opacity: 0.7; font-size: 0.95rem; margin-bottom: 20px;">
+          Создаем уникальные, безопасные и технологичные экспедиции по самым труднодоступным уголкам Краснодарского края.
+        </p>
+        <div class="social-links">
+          <a href="#" class="social-btn"><i class="fa-brands fa-telegram"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-youtube"></i></a>
+          <a href="#" class="social-btn"><i class="fa-brands fa-vk"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Навигация</h4>
+        <ul class="footer-links">
+          <li><a href="#regions">Регионы</a></li>
+          <li><a href="#tours">Активные Туры</a></li>
+          <li><a href="#expertise">Безопасность</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Контакты</h4>
+        <div class="footer-contact">
+          <div><i class="fa-solid fa-phone"></i> +7 (800) 555-35-35</div>
+          <div><i class="fa-solid fa-envelope"></i> prime@kubanadventures.ru</div>
+          <div><i class="fa-solid fa-location-dot"></i> Сочи, Курортный проспект, 108/4</div>
+        </div>
+      </div>
+    </div>
+    <div class="copyright">
+      &copy; 2026 KubanAdventures. Все права защищены. Экспедиционное агентство премиум-класса.
+    </div>
+  </footer>
+
+  <!-- МОДАЛЬНОЕ ОКНО ТУРА -->
+  <div class="modal-overlay" id="tourModal">
+    <div class="modal-window">
+      <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header" id="modalHeader">
+        <!-- Генерируемый динамический водяной знак -->
+      </div>
+      <div class="modal-body">
+        <h3 class="modal-title" id="modalTitle">Название экскурсии</h3>
+        <div class="modal-specs">
+          <span id="modalDuration"><i class="fa-regular fa-clock"></i> 0 ч</span>
+          <span id="modalDifficulty"><i class="fa-solid fa-gauge-high"></i> Высокая</span>
+          <span id="modalCategory"><i class="fa-solid fa-compass"></i> Категория</span>
+        </div>
+        
+        <p class="modal-text" id="modalLongDesc">Детальное описание...</p>
+
+        <div class="modal-details-grid">
+          <div class="modal-detail-block">
+            <h4>Включено в стоимость:</h4>
+            <ul id="modalInclusions">
+              <!-- JS -->
+            </ul>
+          </div>
+          <div class="modal-detail-block">
+            <h4>Рекомендации к экипировке:</h4>
+            <ul id="modalEquipment">
+              <!-- JS -->
+            </ul>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+          <div>
+            <span style="font-size: 0.85rem; opacity: 0.6; text-transform: uppercase;">Стоимость экспедиции:</span>
+            <div id="modalPrice" style="font-size: 2rem; font-weight: 700; color: var(--accent-gold);">0 ₽</div>
+          </div>
+        </div>
+
+        <!-- Кнопка вызова формы -->
+        <button class="booking-trigger-btn" onclick="toggleBookingForm()">Забронировать приключение</button>
+
+        <!-- Раскрывающаяся мини-форма -->
+        <div class="booking-form-wrapper" id="bookingFormWrapper">
+          <form class="booking-form" onsubmit="handleBookingSubmit(event)">
+            <div class="form-group">
+              <label for="bookName">Ваше имя</label>
+              <input type="text" id="bookName" required placeholder="Константин">
+            </div>
+            <div class="form-group">
+              <label for="bookPhone">Номер телефона</label>
+              <input type="tel" id="bookPhone" required placeholder="+7 (999) 000-00-00">
+            </div>
+            <button type="submit" class="btn-submit">Отправить заявку в Prime-службу</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- === JAVASCRIPT: ДАННЫЕ И СИСТЕМНАЯ ЛОГИКА === -->
+  <script>
+    /* === 28 РЕАЛИСТИЧНЫХ ЭКСКУРСИЙ, РАСПРЕДЕЛЕННЫХ ПО РЕГИОНАМ === */
+    const TOURS = [
+      // 1-4. СОЧИ
+      {
+        id: 1, regionId: 'sochi', category: 'jeep',
+        title: 'Реликтовый Каньон Псахо', duration: '6 ч', difficulty: 'Средняя', price: '8 500 ₽',
+        desc: 'Экстремальное преодоление водных преград и глубоких ущелий на премиум-внедорожниках.',
+        longDesc: 'Маршрут по дну древнего океана Тетис. Вы преодолеете каменистые броды горной реки Псахо, посетите заповедный реликтовый самшитовый лес, искупаетесь в изумрудных купелях карстового ущелья и пообедаете в приватном эко-парке.',
+        inclusions: ['Трансфер на премиальном внедорожнике', 'Услуги профессионального гида-инструктора', 'Экологические сборы заповедника', 'Чайная пауза со свежим горным медом'],
+        equipment: ['Удобная треккинговая обувь', 'Купальные принадлежности для горных рек', 'Ветровка на вечер']
+      },
+      {
+        id: 2, regionId: 'sochi', category: 'quad',
+        title: 'Штурм Хребта Алек', duration: '4 ч', difficulty: 'Высокая', price: '12 000 ₽',
+        desc: 'Динамичный подъем сквозь самшитовые джунгли на мощных полноприводных квадроциклах.',
+        longDesc: 'Маршрут для ценителей драйва. Преодолевая грязевые переходы, скальные уступы и лесные завалы хребта Алек, вы подниметесь на смотровую площадку на высоте более 1000 метров с панорамой Кавказа.',
+        inclusions: ['Индивидуальный двухместный квадроцикл', 'Шлем, защитный костюм и очки', 'Работа личного тренера-инструктора', 'Трансфер из отеля'],
+        equipment: ['Одежда с длинным рукавом (возможна пыль и грязь)', 'Плотная закрытая обувь', 'Солнцезащитные очки']
+      },
+      {
+        id: 3, regionId: 'sochi', category: 'sup',
+        title: 'Рассвет на мысе Видный', duration: '3 ч', difficulty: 'Легкая', price: '5 500 ₽',
+        desc: 'Утреннее скольжение по зеркальной глади Черного моря в окружении морских обитателей.',
+        longDesc: 'Встретьте восход солнца на уединенном участке черноморского шельфа. На широких профессиональных SUP-бордах мы обогнем скалистый мыс Видный, сделаем панорамные снимки утреннего побережья и насладимся свежим кофе.',
+        inclusions: ['Снаряжение премиум-класса (SUP, весло, лиш)', 'Спасательный жилет / гидрокостюм', 'Инструктаж от чемпиона РФ', 'Завтрак на воде и съемка с дрона'],
+        equipment: ['Купальник или плавки', 'Солнцезащитный крем (SPF 50+)', 'Сменное сухое белье']
+      },
+      {
+        id: 4, regionId: 'sochi', category: 'hiking',
+        title: 'Восхождение на Ачишхо', duration: '9 ч', difficulty: 'Высокая', price: '9 500 ₽',
+        desc: 'Пеший поход на легендарную горную вершину мимо альпийских лугов и водопадов.',
+        longDesc: 'Исследуйте одно из самых влажных и зеленых мест нашей страны. Тропа ведет сквозь исполинские буковые леса к озерам Хмелевского и выводит на скалистый гребень Ачишхо, откуда открывается вид на хребты Аибга и Чугуш.',
+        inclusions: ['Сопровождение сертифицированного горного гида', 'Эко-билеты в заповедник', 'Аренда треккинговых палок высокого класса', 'Сытный горный ланч-бокс'],
+        equipment: ['Горные ботинки с глубоким протектором', 'Рюкзак объемом 20-30 литров', 'Дождевик или мембранная куртка']
+      },
+
+      // 5-8. ГЕЛЕНДЖИК
+      {
+        id: 5, regionId: 'gelendzhik', category: 'jeep',
+        title: 'Грозовые Ворота и Пшада', duration: '7 ч', difficulty: 'Средняя', price: '7 500 ₽',
+        desc: 'Джиппинг к кино-крепости на вершине горы Абин и дольменам древних цивилизаций.',
+        longDesc: 'На подготовленных внедорожниках мы поднимемся к легендарной крепости Грозовые Ворота. Оттуда спустимся в каньон реки Пшада, где укроемся от зноя под каскадом водопадов и прикоснемся к тайнам неолитических дольменов.',
+        inclusions: ['Подготовленный экспедиционный внедорожник', 'Опытный водитель-гид', 'Доступ на смотровые и исторические локации', 'Полноценный обед с блюдами на углях'],
+        equipment: ['Обувь с фиксированной пяткой для ходьбы по руслу реки', 'Уборы от солнца', 'Бутылка питьевой воды']
+      },
+      {
+        id: 6, regionId: 'gelendzhik', category: 'quad',
+        title: 'Высоты Маркотхского Хребта', duration: '3 ч', difficulty: 'Средняя', price: '9 000 ₽',
+        desc: 'Панорамный заезд на квадроциклах по каменистому перевалу над морем.',
+        longDesc: 'Крутой техничный подъем по извилистым каменистым тропам Маркотхского хребта. С вершины перед вами откроется круговая панорама Геленджикской бухты и затаившегося внизу курорта.',
+        inclusions: ['Мощный современный квадроцикл', 'Шлем и полный комплект пылезащиты', 'Сертифицированный проводник во главе группы', 'Прохладительные напитки на маршруте'],
+        equipment: ['Спортивные брюки и закрытая обувь', 'Очки для защиты от пыли', 'Экшн-камера (при наличии)']
+      },
+      {
+        id: 7, regionId: 'gelendzhik', category: 'sup',
+        title: 'Скалы Голубой Бездны', duration: '4 ч', difficulty: 'Средняя', price: '6 000 ₽',
+        desc: 'Морская экспедиция вдоль обрывистых белых скал с реликтовыми пицундскими соснами.',
+        longDesc: 'Вы пойдете на SUP-бордах вдоль знаменитого дикого побережья, где белоснежные отвесные скалы встречаются с бирюзовой морской гладью. Мы остановимся на снорклинг в закрытой бухте и устроим фруктовый пикник.',
+        inclusions: ['Аренда SUP-комплекта', 'Маска и трубка для снорклинга', 'Лайф-аксессуары и жилет', 'Пикник с фруктами на диком берегу'],
+        equipment: ['Купальные костюмы', 'Пляжное полотенце', 'Аквашузы (рекомендуется для гальки)']
+      },
+      {
+        id: 8, regionId: 'gelendzhik', category: 'hiking',
+        title: 'Тайны Плесецких Водопадов', duration: '8 ч', difficulty: 'Средняя', price: '6 500 ₽',
+        desc: 'Пешая экспедиция по тенистому горному разлому вдоль ста каскадов чистой воды.',
+        longDesc: 'Маршрут проходит в глубине Плесецкой щели. Нас ждет поход по прохладному руслу ручья, окруженного изумрудными замшелыми скалами. Вы увидите величественные водопады «Два брата» и искупаетесь в их освежающих чашах.',
+        inclusions: ['Сопровождение опытного краеведа', 'Входные билеты в рекреационную зону', 'Походный термос с чаем и фирменный перекус', 'Групповая аптечка'],
+        equipment: ['Треккинговые сандалии или кроссовки с хорошим сцеплением', 'Дополнительный комплект сухой одежды']
+      },
+
+      // 9-12. АНАПА
+      {
+        id: 9, regionId: 'anapa', category: 'jeep',
+        title: 'Заповедный Полуостров Утриш', duration: '5 ч', difficulty: 'Легкая', price: '6 800 ₽',
+        desc: 'Внедорожное сафари к смотровым площадкам реликтовых можжевеловых лесов.',
+        longDesc: 'Маршрут пролегает по грунтовым серпантинам Большого Утриша. Вы посетите смотровые площадки, откуда открывается вид на скалы и дикие лагуны, подышите целебным воздухом можжевельников возрастом до 1000 лет.',
+        inclusions: ['Проезд на комфортабельном полноприводном авто', 'Услуги экскурсовода-биолога', 'Официальный пропуск на территорию заповедника', 'Дегустация местных фермерских продуктов'],
+        equipment: ['Легкая прогулочная одежда', 'Удобные кеды или кроссовки', 'Солнцезащитные очки']
+      },
+      {
+        id: 10, regionId: 'anapa', category: 'quad',
+        title: 'Песчаное Сафари Витязево', duration: '3 ч', difficulty: 'Средняя', price: '8 000 ₽',
+        desc: 'Адреналиновый драйв на квадроциклах по диким песчаным дюнам побережья.',
+        longDesc: 'Ощутите масштаб настоящей песчаной пустыни всего в нескольких сотнях метров от кромки моря. На мощных машинах мы пронесемся по барханам Витязево и совершим остановку на диком безлюдном пляже.',
+        inclusions: ['Премиальный полноприводный квадроцикл', 'Профессиональный шлем и экипировка', 'Копровождение ведущего инструктора', 'Индивидуальные фотографии'],
+        equipment: ['Одежда, которую легко постирать от песка', 'Высокая закрытая обувь', 'Головной убор']
+      },
+      {
+        id: 11, regionId: 'anapa', category: 'sup',
+        title: 'Кипарисы Озера Сукко', duration: '3 ч', difficulty: 'Легкая', price: '5 000 ₽',
+        desc: 'Эстетичное плавание на SUP-бордах среди мистических болотных великанов.',
+        longDesc: 'Пройдите на сап-бордах между стволов 32 болотных кипарисов, растущих прямо из прозрачной пресной воды. Наша группа прибывает на место ранним утром, обгоняя туристические толпы ради тишины и чистых кадров.',
+        inclusions: ['Премиальное SUP-снаряжение', 'Спасжилет', 'Услуги сертифицированного инструктора', 'Индивидуальная фотосессия на воде'],
+        equipment: ['Удобная одежда для пляжного отдыха', 'Солнцезащитный крем', 'Головной убор']
+      },
+      {
+        id: 12, regionId: 'anapa', category: 'hiking',
+        title: 'Тропа "Начало Кавказа"', duration: '5 ч', difficulty: 'Легкая', price: '4 500 ₽',
+        desc: 'Прогулка от песчаных равнин к первому крутому уступу Кавказского хребта.',
+        longDesc: 'Тропа берет начало у памятника «Парящий орел» и петляет по вершинам береговых хребтов. Вы увидите удивительную смену ландшафта — от сухой степи до тенистых горных балок со средиземноморской флорой.',
+        inclusions: ['Личный гид-проводник', 'Трансфер к началу маршрута', 'Минеральная вода и полезные энергетические батончики'],
+        equipment: ['Спортивная обувь со светлой подошвой', 'Солнцезащитные средства', 'Ветровка на случай ветра с моря']
+      },
+
+      // 13-16. НОВОРОССИЙСК
+      {
+        id: 13, regionId: 'novorossiysk', category: 'jeep',
+        title: 'Маркотх: Ветрогенераторы и Хребты', duration: '5 ч', difficulty: 'Средняя', price: '7 000 ₽',
+        desc: 'Джип-подъем к гигантским ветрякам и заброшенным военным укрепрайонам.',
+        longDesc: 'Маршрут проведет вас на вершину Маркотхского хребта к заброшенной радиолокационной станции и огромным футуристичным ветряным мельницам. Отсюда открывается вид на Цемесскую бухту и Кабардинку.',
+        inclusions: ['Экспедиционный внедорожник высокой проходимости', 'Гид-экскурсовод', 'Сборы за въезд на приватные смотровые площадки', 'Горячий травяной чай с местной выпечкой'],
+        equipment: ['Плотная куртка-ветровка (на хребте всегда дует сильный ветер)', 'Кроссовки']
+      },
+      {
+        id: 14, regionId: 'novorossiysk', category: 'quad',
+        title: 'Абрауские Дикие Тропы', duration: '4 ч', difficulty: 'Высокая', price: '10 500 ₽',
+        desc: 'Техничный лесной заезд по каменистым колеям и холмам полуострова Абрау.',
+        longDesc: 'Это испытание для подготовленных. Вас ждут затяжные подъемы, броды лесных ручьев и объезды поваленных деревьев. В финале маршрута мы выберемся на дикий скальный мыс с видом на море.',
+        inclusions: ['Аренда мощного двухместного квадроцикла', 'Защитный костюм, шлем, подшлемник', 'Сопровождение опытного рейнджера МЧС', 'Бутилированная вода'],
+        equipment: ['Крепкая закрытая обувь', 'Одежда с длинным рукавом из плотной ткани']
+      },
+      {
+        id: 15, regionId: 'novorossiysk', category: 'sup',
+        title: 'Суджукская Лагуна и Коса', duration: '3 ч', difficulty: 'Легкая', price: '4 800 ₽',
+        desc: 'Прогулка по спокойной акватории лагуны к старому маяку Новороссийска.',
+        longDesc: 'Маршрут проходит в защищенной от волн акватории Суджукской лагуны. Это место отлично подходит для первого опыта на SUP-борде. Мы обойдем косу, дойдем до старого маяка и встретим дельфинов на границе бухты.',
+        inclusions: ['Профессиональный SUP-борд, весло', 'Спасательный жилет', 'Персональный разбор техники гребли от тренера', 'Фото и видео на экшн-камеру'],
+        equipment: ['Купальник или шорты', 'Крем от загара', 'Головной убор']
+      },
+      {
+        id: 16, regionId: 'novorossiysk', category: 'hiking',
+        title: 'Легенды Горы Колдун', duration: '6 ч', difficulty: 'Средняя', price: '5 200 ₽',
+        desc: 'Поход по хребту Мысхако к оборонительным фортам времен Великой Отечественной.',
+        longDesc: 'Пеший переход на вершину горы Колдун (Мысхако). Наш гид-историк расскажет о сражениях на Малой Земле. Вы увидите скрытые в лесу руины немецких бункеров и насладитесь видом на открытое море.',
+        inclusions: ['Персональный гид-историк', 'Аренда треккингового снаряжения', 'Походный ланч на вершине', 'Трансфер из Мысхако'],
+        equipment: ['Треккинговые кроссовки', 'Головной убор', 'Небольшой рюкзак']
+      },
+
+      // 17-20. КРАСНАЯ ПОЛЯНА
+      {
+        id: 17, regionId: 'polyana', category: 'jeep',
+        title: 'Затерянная Медовеевка и Нарзаны', duration: '5 ч', difficulty: 'Легкая', price: '9 000 ₽',
+        desc: 'Экспедиция по старой грунтовой дороге в горную глушь к природным источникам.',
+        longDesc: 'Маршрут ведет в уединенное горное село Медовеевка, скрытое в ущельях за пределами цивилизации. По дороге мы заедем к дикому Чвижепсинскому источнику нарзана, бьющему прямо из скалы.',
+        inclusions: ['Премиальный полноприводный внедорожник', 'Услуги водителя-гида', 'Билеты на источник', 'Обед в крафтовой гастропабе Медовеевки'],
+        equipment: ['Удобная повседневная одежда', 'Спортивная обувь']
+      },
+      {
+        id: 18, regionId: 'polyana', category: 'quad',
+        title: 'Высокогорный Экстрим Аибги', duration: '4 ч', difficulty: 'Высокая', price: '14 000 ₽',
+        desc: 'Экстремальный подъем на высоту 2000м по служебным серпантинам курорта.',
+        longDesc: 'Поднимитесь на мощном квадроцикле в зону альпийских лугов хребта Аибга. Мы преодолеем затяжные крутые подъемы, проедем через прохладные горные тоннели и окажемся буквально выше облаков.',
+        inclusions: ['Квадроцикл повышенной мощности', 'Экипировка максимальной степени защиты', 'Сопровождение профессиональных спасателей', 'Пропуск на технологические дороги'],
+        equipment: ['Ветро- и влагозащитная куртка', 'Высокие прочные ботинки', 'Сменные перчатки']
+      },
+      {
+        id: 19, regionId: 'polyana', category: 'sup',
+        title: 'Озеро Зеркальное в облаках', duration: '4 ч', difficulty: 'Средняя', price: '7 800 ₽',
+        desc: 'SUP-экспедиция на тихое высокогорное озеро в окружении снежных пиков.',
+        longDesc: 'Эксклюзивный маршрут на высокогорные озера Хмелевского. В кристально чистой воде отражаются вековые кавказские ледники. Вас ждет сессия медитации и йоги на воде в абсолютной тишине природы.',
+        inclusions: ['Заброска на внедорожнике к озерам', 'SUP-оборудование премиум-класса', 'Йога-сессия с сертифицированным мастером', 'Травяная чайная церемония'],
+        equipment: ['Термобелье или теплый спортивный костюм', 'Ветрозащитная куртка']
+      },
+      {
+        id: 20, regionId: 'polyana', category: 'hiking',
+        title: 'Бзерпинский Карниз', duration: '8 ч', difficulty: 'Средняя', price: '8 500 ₽',
+        desc: 'Классический пеший треккинг к панорамным альпийским полям Кавказа.',
+        longDesc: 'Поднявшись на канатке до Пихтовой поляны, мы начнем пеший подъем к Бзерпинскому карнизу. Зеленые склоны, дикие цветы рододендроны, табуны вольных лошадей и панорама на ущелье реки Мзымта ждут нас.',
+        inclusions: ['Билеты на канатную дорогу Газпром Альпика', 'Пропуск Кавказского биосферного заповедника', 'Горный гид высокой квалификации', 'Полноценный обед на привале'],
+        equipment: ['Горные ботинки', 'Теплый флисовый слой одежды', 'Солнцезащитные очки и SPF-крем']
+      },
+
+      // 21-24. АБРАУ-ДЮРСО
+      {
+        id: 21, regionId: 'abrau', category: 'jeep',
+        title: 'Виноградные Террасы и Ветропарк', duration: '4 ч', difficulty: 'Легкая', price: '8 000 ₽',
+        desc: 'Джип-путешествие по закрытым грунтовым серпантинам лучших виноградников.',
+        longDesc: 'Маршрут проходит по закрытым частным дорогам шато Абрау-Дюрсо. Мы поднимемся к старым ветряным генераторам, проедем мимо стройных рядов лозы на склонах холмов и встретим закат с бокалом игристого.',
+        inclusions: ['Премиальный внедорожник с открытым верхом', 'Персональный гид-сомелье', 'Бокал премиального вина на видовой точке', 'Входные билеты'],
+        equipment: ['Стильный повседневный аутфит для фото', 'Солнцезащитные очки']
+      },
+      {
+        id: 22, regionId: 'abrau', category: 'quad',
+        title: 'Реликтовые Тропы Дюрсо', duration: '3 ч', difficulty: 'Средняя', price: '9 500 ₽',
+        desc: 'Драйв на квадроциклах от тихого пресного озера к бушующему открытому морю.',
+        longDesc: 'Лесной маршрут сквозь вековые реликтовые можжевеловые заросли полуострова Абрау. Дорога петляет по каменистым тропинкам и выводит на дикий пляж Дюрсо с крупной галькой.',
+        inclusions: ['Мощный современный квадроцикл', 'Шлем, очки, пылезащитная одежда', 'Опытный проводник-инструктор', 'Прохладные напитки'],
+        equipment: ['Закрытая обувь, которую можно мочить в море', 'Купальный костюм']
+      },
+      {
+        id: 23, regionId: 'abrau', category: 'sup',
+        title: 'Изумрудный Закат на озере Абрау', duration: '2 ч', difficulty: 'Легкая', price: '5 200 ₽',
+        desc: 'Романтичная SUP-прогулка по самому большому пресному водоёму края.',
+        longDesc: 'Озеро Абрау имеет необычный бирюзово-изумрудный оттенок воды. Вечером, когда спадает ветер, вода превращается в гладкое зеркало. Мы пройдем на сапах вдоль набережной и встретим закат у скалистых берегов.',
+        inclusions: ['SUP-оборудование', 'Спасательный жилет', 'Инструктор-фотограф на лодке сопровождения', 'Бокал игристого на воде'],
+        equipment: ['Летняя пляжная одежда', 'Полотенце']
+      },
+      {
+        id: 24, regionId: 'abrau', category: 'hiking',
+        title: 'Домик Йога над Морской Бездной', duration: '5 ч', difficulty: 'Легкая', price: '4 800 ₽',
+        desc: 'Эко-хайкинг по поросшим можжевельником кручам к знаменитой панорамной беседке.',
+        longDesc: 'Легкий пеший маршрут сквозь дикий приморский лес. Мы выйдем на край отвесного обрыва к Домику Йога — уединенной деревянной ротонде, висящей на высоте более 150 метров над бушующим морем.',
+        inclusions: ['Личный гид-краевед', 'Экологические сборы', 'Чайная церемония в беседке на обрыве'],
+        equipment: ['Удобные кеды или кроссовки с нескользящей подошвой', 'Ветрозащитная кофта']
+      },
+
+      // 25-28. ЛАГО-НАКИ
+      {
+        id: 25, regionId: 'lagonaki', category: 'jeep',
+        title: 'Азишский Перевал и Глубокие Пещеры', duration: '6 ч', difficulty: 'Средняя', price: '8 800 ₽',
+        desc: 'Внедорожный подъем на плато к древним сталактитовым подземельям.',
+        longDesc: 'Экспедиция на заснеженное плато Лаго-Наки. Мы посетим Большую Азишскую пещеру с гигантскими многовековыми сталактитами и поднимемся к панорамным точкам Азишского хребта с видами на долину реки Курджипс.',
+        inclusions: ['Подготовленный экспедиционный джип', 'Сертифицированный спелеогид', 'Входные билеты в пещеру', 'Традиционный адыгейский обед в горном кафе'],
+        equipment: ['Очень теплая одежда (в пещере +6°C круглый год)', 'Крепкая обувь']
+      },
+      {
+        id: 26, regionId: 'lagonaki', category: 'quad',
+        title: 'Каменное Море Лаго-Наки', duration: '4 ч', difficulty: 'Высокая', price: '13 500 ₽',
+        desc: 'Заезд по карстовым полям и древним известняковым гребням.',
+        longDesc: 'Уникальный и сложный ландшафт — Каменное море. Это застывшие известняковые гребни у подножия горы Оштен. Техничный заезд по каменистым уступам среди альпийской растительности требует предельной концентрации.',
+        inclusions: ['Профессиональный двухместный квадроцикл', 'Полный комплект защиты и шлем', 'Сопровождение горного инструктора МЧС', 'Трансфер на плато'],
+        equipment: ['Плотная треккинговая обувь', 'Теплая куртка с защитой от ветра', 'Сменная сухая одежда']
+      },
+      {
+        id: 27, regionId: 'lagonaki', category: 'sup',
+        title: 'Каньон Хаджохской Теснины', duration: '3 ч', difficulty: 'Высокая', price: '8 000 ₽',
+        desc: 'Экстремальное SUP-путешествие по узкому скалистому ущелью реки Белой.',
+        longDesc: 'Маршрут повышенной сложности для опытных райдеров. Вы пройдете по течению бурной реки в узком каньоне, ширина которого в некоторых местах составляет всего несколько метров, а стены уходят вверх на десятки метров.',
+        inclusions: ['Профессиональный SUP высокой жесткости', 'Гидрокостюм мокрого типа, шлем, защитный жилет', 'Инструктор-спасатель на каяке сопровождения', 'Трансфер к реке'],
+        equipment: ['Сменное нижнее белье под гидрокостюм', 'Полотенце', 'Уверенные навыки плавания']
+      },
+      {
+        id: 28, regionId: 'lagonaki', category: 'hiking',
+        title: 'Штурм Вершины Оштен (2804м)', duration: '10 ч', difficulty: 'Высокая', price: '9 800 ₽',
+        desc: 'Альпинистское восхождение на одну из ключевых вершин Фишт-Оштеновского массива.',
+        longDesc: 'Настоящее горное восхождение. Мы стартуем от Яворовой поляны и идем по альпийским лугам к каменистому предвершинному гребню Оштена. С вершины открывается панорама Главного Кавказского Хребта во всем величии.',
+        inclusions: ['Сопровождение сертифицированного инструктора по альпинизму', 'Пропуск МЧС и заповедника', 'Индивидуальные треккинговые палки и каска', 'Высокогорный горячий ланч'],
+        equipment: ['Треккинговые ботинки с жесткой подошвой', 'Флисовая кофта, мембранная ветрозащита', 'Солнцезащитные очки (категория 3-4)']
+      }
+    ];
+
+    /* === СИСТЕМНАЯ ЛОГИКА И ИНТЕРАКТИВНОСТЬ === */
+    document.addEventListener("DOMContentLoaded", () => {
+      initParallax();
+      initHeaderScroll();
+      initRegionsSelection();
+      initFilters();
+      initModalCloseEvents();
+    });
+
+    /* 1. ПАРАЛЛАКС 2.0 (Высокопроизводительный через CSS Variables) */
+    function initParallax() {
+      let ticked = false;
+      window.addEventListener('scroll', () => {
+        if (!ticked) {
+          window.requestAnimationFrame(() => {
+            document.documentElement.style.setProperty('--scroll-y', `${window.scrollY}px`);
+            ticked = false;
+          });
+          ticked = true;
+        }
+      });
+    }
+
+    /* 2. СТРАТЕГИЧЕСКИЙ ХЕДЕР (Смена стиля при скролле) */
+    function initHeaderScroll() {
+      const header = document.querySelector('header');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+          header.classList.add('scrolled');
+        } else {
+          header.classList.remove('scrolled');
+        }
+      });
+    }
+
+    /* 3. ИНТЕРАКТИВНЫЙ ВЫБОР РЕГИОНА */
+    let selectedRegion = null;
+    let selectedCategory = 'all';
+
+    function initRegionsSelection() {
+      const regionsGrid = document.getElementById('regionsGrid');
+      const cards = document.querySelectorAll('.region-card');
+
+      cards.forEach(card => {
+        card.addEventListener('click', () => {
+          const regionId = card.getAttribute('data-id');
+          const regionName = card.querySelector('h3').textContent;
+
+          // Обновление интерактивных классов
+          if (card.classList.contains('active')) {
+            // Снятие выбора
+            card.classList.remove('active');
+            regionsGrid.classList.remove('has-active');
+            selectedRegion = null;
+            hideToursSection();
+          } else {
+            // Активация карты
+            cards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            regionsGrid.classList.add('has-active');
+            selectedRegion = regionId;
+            
+            // Настройка заголовка секции туров
+            document.getElementById('selectedRegionTitle').textContent = `Экспедиции в регионе ${regionName}`;
+            document.getElementById('selectedRegionSubtitle').textContent = `направление: ${regionName}`;
+            
+            showToursSection();
+            renderTours();
+            
+            // Мягкий скролл к турам после выбора
+            setTimeout(() => {
+              document.getElementById('tours').scrollIntoView({ behavior: 'smooth' });
+            }, 150);
+          }
+        });
+      });
+    }
+
+    function showToursSection() {
+      const toursSection = document.getElementById('tours');
+      toursSection.classList.add('visible');
+    }
+
+    function hideToursSection() {
+      const toursSection = document.getElementById('tours');
+      toursSection.classList.remove('visible');
+    }
+
+    /* 4. ФИЛЬТРАЦИЯ ТУРОВ */
+    function initFilters() {
+      const pills = document.querySelectorAll('.filter-pill');
+      pills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          pills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          selectedCategory = pill.getAttribute('data-filter');
+          renderTours();
+        });
+      });
+    }
+
+    /* 5. РЕНДЕРИНГ КАРТОЧЕК ТУРОВ (Vanilla JS) */
+    function renderTours() {
+      const toursGrid = document.getElementById('toursGrid');
+      toursGrid.innerHTML = '';
+
+      if (!selectedRegion) return;
+
+      // Фильтрация данных по двум критериям
+      const filteredTours = TOURS.filter(tour => {
+        const matchesRegion = tour.regionId === selectedRegion;
+        const matchesCategory = selectedCategory === 'all' || tour.category === selectedCategory;
+        return matchesRegion && matchesCategory;
+      });
+
+      if (filteredTours.length === 0) {
+        toursGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px 0; opacity: 0.6;">Маршруты в данной категории временно разрабатываются. Выберите другой тип приключения.</div>`;
+        return;
+      }
+
+      filteredTours.forEach(tour => {
+        const card = document.createElement('div');
+        card.className = 'tour-card';
+        card.setAttribute('data-category', tour.category);
+        card.setAttribute('data-id', tour.id);
+
+        // Иконки типов активности для водяных знаков и деталей
+        let iconClass = 'fa-solid fa-compass';
+        if (tour.category === 'jeep') iconClass = 'fa-solid fa-truck-monster';
+        if (tour.category === 'quad') iconClass = 'fa-solid fa-motorcycle';
+        if (tour.category === 'sup') iconClass = 'fa-solid fa-water';
+        if (tour.category === 'hiking') iconClass = 'fa-solid fa-person-hiking';
+
+        card.innerHTML = `
+          <div class="tour-image-fallback">
+            <i class="${iconClass} tour-watermark"></i>
+          </div>
+          <div class="tour-info">
+            <div>
+              <h3 class="tour-title">${tour.title}</h3>
+              <p class="tour-desc">${tour.desc}</p>
+            </div>
+            <div>
+              <div class="tour-specs">
+                <span><i class="fa-regular fa-clock"></i> ${tour.duration}</span>
+                <span><i class="fa-solid fa-gauge-high"></i> ${tour.difficulty}</span>
+              </div>
+              <div class="tour-footer">
+                <div class="tour-price-container">
+                  <span class="tour-price-label">Стоимость:</span>
+                  <span class="tour-price">${tour.price}</span>
+                </div>
+                <div class="tour-btn-circle"><i class="fa-solid fa-arrow-right"></i></div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Клик по карточке открывает модал
+        card.addEventListener('click', () => {
+          openModal(tour.id);
+        });
+
+        toursGrid.appendChild(card);
+      });
+    }
+
+    /* 6. МОДАЛЬНОЕ ОКНО ПРЕМИУМ-УРОВНЯ */
+    function openModal(tourId) {
+      const tour = TOURS.find(t => t.id === tourId);
+      if (!tour) return;
+
+      const modal = document.getElementById('tourModal');
+      const header = document.getElementById('modalHeader');
+      
+      // Сброс фоновых классов хедера
+      header.className = 'modal-header';
+      // Установка категорийного класса для хедера модала
+      header.classList.add('tour-card');
+      header.parentNode.setAttribute('data-category', tour.category);
+
+      let iconClass = 'fa-solid fa-compass';
+      if (tour.category === 'jeep') iconClass = 'fa-solid fa-truck-monster';
+      if (tour.category === 'quad') iconClass = 'fa-solid fa-motorcycle';
+      if (tour.category === 'sup') iconClass = 'fa-solid fa-water';
+      if (tour.category === 'hiking') iconClass = 'fa-solid fa-person-hiking';
+
+      // Наполнение данными
+      header.innerHTML = `<i class="${iconClass} tour-watermark"></i>`;
+      document.getElementById('modalTitle').textContent = tour.title;
+      document.getElementById('modalDuration').innerHTML = `<i class="fa-regular fa-clock"></i> ${tour.duration}`;
+      document.getElementById('modalDifficulty').innerHTML = `<i class="fa-solid fa-gauge-high"></i> Сложность: ${tour.difficulty}`;
+      document.getElementById('modalCategory').innerHTML = `<i class="${iconClass}"></i> ${tour.category.toUpperCase()}`;
+      document.getElementById('modalLongDesc').textContent = tour.longDesc;
+      document.getElementById('modalPrice').textContent = tour.price;
+
+      // Списки
+      const inclusionsUl = document.getElementById('modalInclusions');
+      inclusionsUl.innerHTML = '';
+      tour.inclusions.forEach(item => {
+        inclusionsUl.innerHTML += `<li>${item}</li>`;
+      });
+
+      const equipmentUl = document.getElementById('modalEquipment');
+      equipmentUl.innerHTML = '';
+      tour.equipment.forEach(item => {
+        equipmentUl.innerHTML += `<li>${item}</li>`;
+      });
+
+      // Закрытие формы бронирования по умолчанию
+      document.getElementById('bookingFormWrapper').classList.remove('active');
+
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden'; // Локинг скролла под модалом
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('tourModal');
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function initModalCloseEvents() {
+      const modal = document.getElementById('tourModal');
+      
+      // Закрытие кликом по оверлею
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Закрытие по Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+          closeModal();
+        }
+      });
+    }
+
+    /* 7. ИНТЕРАКТИВНАЯ ФОРМА БРОНИРОВАНИЯ */
+    function toggleBookingForm() {
+      const wrapper = document.getElementById('bookingFormWrapper');
+      wrapper.classList.toggle('active');
+      if (wrapper.classList.contains('active')) {
+        setTimeout(() => {
+          wrapper.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 300);
+      }
+    }
+
+    function handleBookingSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('bookName').value;
+      const phone = document.getElementById('bookPhone').value;
+      const tourTitle = document.getElementById('modalTitle').textContent;
+
+      alert(`Благодарим Вас, ${name}! Заявка на экспедицию «${tourTitle}» принята. Наш Prime-консультант свяжется с Вами по номеру ${phone} в течение 10 минут.`);
+      
+      // Сброс формы и закрытие
+      e.target.reset();
+      toggleBookingForm();
+      closeModal();
+    }
+
+    /* 8. ГЛОБАЛЬНАЯ КНОПКА CTA "СВЯЗАТЬСЯ" */
+    function openGeneralContact() {
+      alert("Связь с Prime-службой поддержки KubanAdventures:\nТелефон: +7 (800) 555-35-35\nEmail: prime@kubanadventures.ru\n\nМы работаем круглосуточно для обеспечения вашей безопасности на маршрутах.");
+    }
+  </script>
+</body>
+</html>
