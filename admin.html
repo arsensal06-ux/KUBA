@@ -789,10 +789,25 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function deleteTour(id) {
+    async function deleteTour(id) {
       if (confirm("Вы действительно хотите удалить данный тур?")) {
         TOURS = TOURS.filter(t => t.id !== id);
-        publishData();
+        
+        // Сохраняем локально
+        localStorage.setItem('kab_dynamic_tours', JSON.stringify(TOURS));
+        
+        // Отправляем в Firebase
+        if (isFirebaseReady) {
+          try {
+            await db.ref('tours').set(TOURS);
+            console.log("Тур успешно удален из Firebase");
+          } catch (e) {
+            console.error("Ошибка удаления из Firebase:", e);
+            alert("Ошибка при удалении из базы данных");
+            return;
+          }
+        }
+        
         renderToursList();
       }
     }
@@ -804,7 +819,7 @@
       document.getElementById('tourSubmitBtn').textContent = "Создать тур";
     }
 
-    function handleTourSave(e) {
+    async function handleTourSave(e) {
       e.preventDefault();
 
       const id = document.getElementById('editTourId').value;
@@ -841,9 +856,24 @@
         TOURS.push(tourPayload);
       }
 
-      publishData();
+      // Сохраняем локально
+      localStorage.setItem('kab_dynamic_tours', JSON.stringify(TOURS));
+
+      // Отправляем в Firebase
+      if (isFirebaseReady) {
+        try {
+          await db.ref('tours').set(TOURS);
+          console.log("Тур успешно сохранен в Firebase");
+        } catch (e) {
+          console.error("Ошибка сохранения в Firebase:", e);
+          alert("Ошибка при сохранении в базу данных");
+          return;
+        }
+      }
+
       renderToursList();
       resetTourForm();
+      alert("Тур успешно сохранен!");
     }
 
     /* ВКЛАДКА 3: РЕДАКТОР СТАТИЧЕСКОГО КОНТЕНТА */
