@@ -11,8 +11,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
   <style>
     :root {
@@ -426,25 +428,34 @@
   <script>
     /* === КОНФИГУРАЦИЯ FIREBASE === */
     const firebaseConfig = {
-      apiKey: "API_KEY_HERE",
+      apiKey: "AIzaSyDV7tI0bjAPQkcoqq8pnWmzREiEW3nngek",
       authDomain: "kubanadventures.firebaseapp.com",
+      databaseURL: "https://kubanadventures-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "kubanadventures",
-      storageBucket: "kubanadventures.appspot.com",
-      messagingSenderId: "SENDER_ID_HERE",
-      appId: "APP_ID_HERE"
+      storageBucket: "kubanadventures.firebasestorage.app",
+      messagingSenderId: "229875586028",
+      appId: "1:229875586028:web:cbd60292ff45d21d9166c9"
     };
 
     const ADMIN_EMAIL = "arsensal06@gmail.com";
     let isFirebaseReady = false;
     let currentUser = null;
+    let db = null;
+    let auth = null;
 
     try {
-      if (firebaseConfig.apiKey !== "API_KEY_HERE") {
+      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "API_KEY_HERE") {
         firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        auth = firebase.auth();
         isFirebaseReady = true;
+        console.log("✅ Firebase инициализирован успешно");
+        console.log("Auth объект:", auth);
+      } else {
+        console.warn("⚠️ Firebase API ключ не настроен");
       }
     } catch (e) {
-      console.error(e);
+      console.error("❌ Ошибка инициализации Firebase:", e);
     }
 
     // Тексты по умолчанию
@@ -504,8 +515,9 @@
     });
 
     function initAuthStateListener() {
-      if (isFirebaseReady) {
-        firebase.auth().onAuthStateChanged((user) => {
+      if (isFirebaseReady && auth) {
+        auth.onAuthStateChanged((user) => {
+          console.log("🔄 Состояние авторизации изменилось:", user ? user.email : "нет пользователя");
           if (user && user.email === ADMIN_EMAIL) {
             grantAccess(user);
           } else {
@@ -545,15 +557,44 @@
       const email = document.getElementById('adminEmail').value;
       const password = document.getElementById('adminPassword').value;
 
+      console.log("🔐 Попытка входа:", email);
+
       if (email !== ADMIN_EMAIL) {
-        alert("Вход запрещен! Доступ имеет только arsensal06@gmail.com");
+        alert("Вход запрещен! Доступ имеет только " + ADMIN_EMAIL);
         return;
       }
 
-      if (isFirebaseReady) {
-        firebase.auth().signInWithEmailAndPassword(email, password)
-          .catch(err => alert("Ошибка Firebase: " + err.message));
+      if (isFirebaseReady && auth) {
+        console.log("📡 Вход через Firebase...");
+        auth.signInWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            console.log("✅ Успешный вход:", userCredential.user);
+          })
+          .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.error("❌ Ошибка входа:", errorCode, errorMessage);
+            
+            // Если пользователь не найден или неверный пароль — создаем нового
+            if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password' || errorCode === 'auth/invalid-email') {
+              const createNew = confirm("Пользователь не найден или неверный пароль. Хотите создать нового администратора?");
+              if (createNew) {
+                console.log("🆕 Создание нового пользователя...");
+                auth.createUserWithEmailAndPassword(email, password)
+                  .then(() => {
+                    alert("✅ Администратор создан! Теперь вы вошли.");
+                  })
+                  .catch(err => {
+                    console.error("Ошибка создания:", err);
+                    alert("Ошибка создания: " + err.message);
+                  });
+              }
+            } else {
+              alert("Ошибка Firebase: " + errorMessage);
+            }
+          });
       } else {
+        console.warn("⚠️ Firebase не готов, используем локальный режим");
         const simulatedUser = { uid: "u_sim_admin", email: email, displayName: "Глава Агентства" };
         localStorage.setItem('kab_sim_user', JSON.stringify(simulatedUser));
         grantAccess(simulatedUser);
@@ -561,8 +602,14 @@
     }
 
     function handleAdminLogout() {
-      if (isFirebaseReady) {
-        firebase.auth().signOut().then(() => location.reload());
+      if (isFirebaseReady && auth) {
+        auth.signOut().then(() => {
+          console.log("👋 Выход выполнен");
+          location.reload();
+        }).catch(err => {
+          console.error("Ошибка выхода:", err);
+          location.reload();
+        });
       } else {
         localStorage.removeItem('kab_sim_user');
         location.reload();
@@ -573,13 +620,22 @@
     async function loadAdminData() {
       if (isFirebaseReady) {
         try {
-          const db = firebase.firestore();
-          const doc = await db.collection("site_config").doc("main").get();
-          if (doc.exists) {
-            const data = doc.data();
-            if (data.tours) TOURS = data.tours;
-            if (data.settings) SITE_SETTINGS = data.settings;
-          }
+          const toursRef = db.ref('tours');
+          const settingsRef = db.ref('settings');
+          
+          toursRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) TOURS = data;
+            renderToursList();
+          });
+          
+          settingsRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) SITE_SETTINGS = data;
+            fillContentForm();
+          });
+          
+          return;
         } catch (e) {
           console.warn("Ошибка Firebase, загрузка из локального хранилища.", e);
         }
@@ -589,6 +645,8 @@
       const localSettings = localStorage.getItem('kab_dynamic_settings');
       if (localTours) TOURS = JSON.parse(localTours);
       if (localSettings) SITE_SETTINGS = JSON.parse(localSettings);
+      renderToursList();
+      fillContentForm();
     }
 
     /* Сохранение изменений в БД и кэш */
@@ -598,11 +656,8 @@
 
       if (isFirebaseReady) {
         try {
-          const db = firebase.firestore();
-          await db.collection("site_config").doc("main").set({
-            tours: TOURS,
-            settings: SITE_SETTINGS
-          });
+          await db.ref('tours').set(TOURS);
+          await db.ref('settings').set(SITE_SETTINGS);
           alert("Данные успешно сохранены и синхронизированы с базой!");
         } catch (e) {
           alert("Ошибка при записи в Firebase, изменения сохранены локально.");
@@ -629,13 +684,15 @@
       let bookings = JSON.parse(localStorage.getItem('kab_bookings') || '[]');
 
       if (isFirebaseReady) {
-        const db = firebase.firestore();
-        db.collection("bookings").get().then((snap) => {
+        const bookingsRef = db.ref('bookings');
+        bookingsRef.on('value', (snapshot) => {
           let fbBookings = [];
-          snap.forEach(doc => fbBookings.push(doc.data()));
+          snapshot.forEach((childSnapshot) => {
+            fbBookings.push(childSnapshot.val());
+          });
           if (fbBookings.length > 0) renderTableRows(fbBookings);
           else renderTableRows(bookings);
-        }).catch(() => renderTableRows(bookings));
+        }, () => renderTableRows(bookings));
       } else {
         renderTableRows(bookings);
       }
@@ -673,8 +730,7 @@
 
     function changeBookingStatus(id, status) {
       if (isFirebaseReady) {
-        const db = firebase.firestore();
-        db.collection("bookings").doc(id).update({ status: status })
+        db.ref('bookings/' + id).update({ status: status })
           .then(() => renderBookings())
           .catch(() => updateLocalBookingStatus(id, status));
       } else {
@@ -735,10 +791,25 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function deleteTour(id) {
+    async function deleteTour(id) {
       if (confirm("Вы действительно хотите удалить данный тур?")) {
         TOURS = TOURS.filter(t => t.id !== id);
-        publishData();
+        
+        // Сохраняем локально
+        localStorage.setItem('kab_dynamic_tours', JSON.stringify(TOURS));
+        
+        // Отправляем в Firebase
+        if (isFirebaseReady) {
+          try {
+            await db.ref('tours').set(TOURS);
+            console.log("Тур успешно удален из Firebase");
+          } catch (e) {
+            console.error("Ошибка удаления из Firebase:", e);
+            alert("Ошибка при удалении из базы данных");
+            return;
+          }
+        }
+        
         renderToursList();
       }
     }
@@ -750,7 +821,7 @@
       document.getElementById('tourSubmitBtn').textContent = "Создать тур";
     }
 
-    function handleTourSave(e) {
+    async function handleTourSave(e) {
       e.preventDefault();
 
       const id = document.getElementById('editTourId').value;
@@ -787,9 +858,24 @@
         TOURS.push(tourPayload);
       }
 
-      publishData();
+      // Сохраняем локально
+      localStorage.setItem('kab_dynamic_tours', JSON.stringify(TOURS));
+
+      // Отправляем в Firebase
+      if (isFirebaseReady) {
+        try {
+          await db.ref('tours').set(TOURS);
+          console.log("Тур успешно сохранен в Firebase");
+        } catch (e) {
+          console.error("Ошибка сохранения в Firebase:", e);
+          alert("Ошибка при сохранении в базу данных");
+          return;
+        }
+      }
+
       renderToursList();
       resetTourForm();
+      alert("Тур успешно сохранен!");
     }
 
     /* ВКЛАДКА 3: РЕДАКТОР СТАТИЧЕСКОГО КОНТЕНТА */
