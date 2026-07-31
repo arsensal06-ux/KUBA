@@ -12,7 +12,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
     :root {
@@ -426,29 +426,25 @@
   <script>
     /* === КОНФИГУРАЦИЯ FIREBASE === */
     const firebaseConfig = {
-      apiKey: "AIzaSyDV7tI0bjAPQkcoqq8pnWmzREiEW3nngek",
+      apiKey: "API_KEY_HERE",
       authDomain: "kubanadventures.firebaseapp.com",
-      databaseURL: "https://kubanadventures-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "kubanadventures",
-      storageBucket: "kubanadventures.firebasestorage.app",
-      messagingSenderId: "229875586028",
-      appId: "1:229875586028:web:cbd60292ff45d21d9166c9"
+      storageBucket: "kubanadventures.appspot.com",
+      messagingSenderId: "SENDER_ID_HERE",
+      appId: "APP_ID_HERE"
     };
 
     const ADMIN_EMAIL = "arsensal06@gmail.com";
     let isFirebaseReady = false;
     let currentUser = null;
-    let db = null;
 
     try {
-      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "API_KEY_HERE") {
+      if (firebaseConfig.apiKey !== "API_KEY_HERE") {
         firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
         isFirebaseReady = true;
-        console.log("Firebase инициализирован успешно");
       }
     } catch (e) {
-      console.error("Ошибка инициализации Firebase:", e);
+      console.error(e);
     }
 
     // Тексты по умолчанию
@@ -577,22 +573,13 @@
     async function loadAdminData() {
       if (isFirebaseReady) {
         try {
-          const toursRef = db.ref('tours');
-          const settingsRef = db.ref('settings');
-          
-          toursRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) TOURS = data;
-            renderToursList();
-          });
-          
-          settingsRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) SITE_SETTINGS = data;
-            fillContentForm();
-          });
-          
-          return;
+          const db = firebase.firestore();
+          const doc = await db.collection("site_config").doc("main").get();
+          if (doc.exists) {
+            const data = doc.data();
+            if (data.tours) TOURS = data.tours;
+            if (data.settings) SITE_SETTINGS = data.settings;
+          }
         } catch (e) {
           console.warn("Ошибка Firebase, загрузка из локального хранилища.", e);
         }
@@ -602,8 +589,6 @@
       const localSettings = localStorage.getItem('kab_dynamic_settings');
       if (localTours) TOURS = JSON.parse(localTours);
       if (localSettings) SITE_SETTINGS = JSON.parse(localSettings);
-      renderToursList();
-      fillContentForm();
     }
 
     /* Сохранение изменений в БД и кэш */
@@ -613,8 +598,11 @@
 
       if (isFirebaseReady) {
         try {
-          await db.ref('tours').set(TOURS);
-          await db.ref('settings').set(SITE_SETTINGS);
+          const db = firebase.firestore();
+          await db.collection("site_config").doc("main").set({
+            tours: TOURS,
+            settings: SITE_SETTINGS
+          });
           alert("Данные успешно сохранены и синхронизированы с базой!");
         } catch (e) {
           alert("Ошибка при записи в Firebase, изменения сохранены локально.");
@@ -641,15 +629,13 @@
       let bookings = JSON.parse(localStorage.getItem('kab_bookings') || '[]');
 
       if (isFirebaseReady) {
-        const bookingsRef = db.ref('bookings');
-        bookingsRef.on('value', (snapshot) => {
+        const db = firebase.firestore();
+        db.collection("bookings").get().then((snap) => {
           let fbBookings = [];
-          snapshot.forEach((childSnapshot) => {
-            fbBookings.push(childSnapshot.val());
-          });
+          snap.forEach(doc => fbBookings.push(doc.data()));
           if (fbBookings.length > 0) renderTableRows(fbBookings);
           else renderTableRows(bookings);
-        }, () => renderTableRows(bookings));
+        }).catch(() => renderTableRows(bookings));
       } else {
         renderTableRows(bookings);
       }
@@ -687,7 +673,8 @@
 
     function changeBookingStatus(id, status) {
       if (isFirebaseReady) {
-        db.ref('bookings/' + id).update({ status: status })
+        const db = firebase.firestore();
+        db.collection("bookings").doc(id).update({ status: status })
           .then(() => renderBookings())
           .catch(() => updateLocalBookingStatus(id, status));
       } else {
